@@ -3,66 +3,69 @@ from bs4 import BeautifulSoup
 from . import parsers
 from . import telegram_async
 
-class Media:
-    def __init__(self, url, type) -> None:
-        self.url = url
-        self.type = type
 
-    async def toDict(self) -> dict:
+class Media:
+    def __init__(self, url: str, media_type: str) -> None:
+        self.url = url
+        self.type = media_type
+
+    async def to_dict(self) -> dict:
         return {
             'url': self.url,
             'type': self.type
         }
 
+
 class Author:
-    def __init__(self, name, username, photo) -> None:
+    def __init__(self, name: str, username: str, photo: str) -> None:
         self.name = name
         self.username = username
         self.photo = photo
 
-    async def toDict(self) -> dict:
+    async def to_dict(self) -> dict:
         return {
             'name': self.name,
             'username': self.username,
             'photo': self.photo
         }
 
+
 class Comment:
-    def __init__(self, post, id, text, reply, author, datetime) -> None:
+    def __init__(self, post: 'Post', comment_id: int, text: str, reply: int, author: Author, datetime: str) -> None:
         self.post = post
-        self.id = id
+        self.id = comment_id
         self.text = text
         self.reply = reply
         self.author = author
         self.datetime = datetime
 
-    async def toDict(self) -> dict:
+    async def to_dict(self) -> dict:
         return {
             'post': self.post.url,
             'id': self.id,
             'text': self.text,
             'reply': self.reply,
-            'author': await self.author.toDict(),
+            'author': await self.author.to_dict(),
             'datetime': self.datetime
         }
 
 
 class Post:
-    def __init__(self, channel, url, id, html_content, media, views, datetime, data) -> None:
+    def __init__(self, channel: 'Channel', url: str, post_id: int, html_content: str, media: list, views: int, datetime: str, data) -> None:
         self.channel = channel
         self.url = url
-        self.id = id
+        self.id = post_id
         self.html_content = html_content
         self.media = media
-        self.views = int(views)
+        self.views = views
         self.datetime = datetime
         self.__data = data
 
-    async def getComments(self, limit=10) -> list[Comment] | None:
-        return await telegram_async.getComments(self, limit)
+    async def get_comments(self, limit=10) -> list[Comment] | None:
+        return await telegram_async.get_comments(self, limit)
 
-    async def getComment(self, id) -> Comment | None:
-        return await telegram_async.getComment(self, id)
+    async def get_comment(self, comment_id: int) -> Comment | None:
+        return await telegram_async.get_comment(self, comment_id)
 
     def get_text(self) -> str:
         soup = BeautifulSoup(self.html_content, 'html.parser')
@@ -71,11 +74,11 @@ class Post:
     def get_markdown(self) -> str:
         return markdownify.markdownify(self.html_content)
 
-    def getLinks(self) -> list:
+    def get_links(self) -> list:
         soup = BeautifulSoup(self.html_content, 'html.parser')
         return [a['href'] for a in soup.find_all('a', href=True)]
 
-    async def toDict(self) -> dict:
+    async def to_dict(self) -> dict:
         return {
             'channel': self.channel.url,
             'url': self.url,
@@ -83,15 +86,15 @@ class Post:
             'html_content': self.html_content,
             'text': self.get_text(),
             'markdown': self.get_markdown(),
-            'links': self.getLinks(),
-            'media': [await media.toDict() for media in self.media],
+            'links': self.get_links(),
+            'media': [await media.to_dict() for media in self.media],
             'views': self.views,
             'datetime': self.datetime
         }
 
 
 class Channel:
-    def __init__(self, url, name, description, subscribers, picture, data) -> None:
+    def __init__(self, url: str, name: str, description: str, subscribers: int, picture: str, data) -> None:
         self.private = False
         self.url = url
         self.name = name
@@ -101,24 +104,24 @@ class Channel:
         self.__data = data
         self.__posts = {}
 
-    async def getPost(self, id: int) -> Post | None:
-        return await telegram_async.getPost(self, id)
+    async def get_post(self, post_id: int) -> Post | None:
+        return await telegram_async.get_post(self, post_id)
 
-    async def getLatest(self) -> list[Post]:
-        return [parsers.BStoPost(post, self) for post in self.__data.findAll(class_='tgme_widget_message')]
+    async def get_latest(self) -> list[Post]:
+        return [parsers.bs_to_post(post, self) for post in self.__data.find_all(class_='tgme_widget_message')]
 
-    async def getAllPosts(self) -> list[Post]:
+    async def get_all_posts(self) -> list[Post]:
         if not self.__posts:
-            self.__posts = await telegram_async.getAllPosts(self)
+            self.__posts = await telegram_async.get_all_posts(self)
         return self.__posts
 
-    async def isPublic(self) -> bool:
+    async def is_public(self) -> bool:
         return not self.private
 
-    async def isPrivate(self) -> bool:
+    async def is_private(self) -> bool:
         return self.private
 
-    async def toDict(self) -> dict:
+    async def to_dict(self) -> dict:
         return {
             'url': self.url,
             'name': self.name,
