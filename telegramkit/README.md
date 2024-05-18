@@ -1,3 +1,16 @@
+# TelegramKit
+
+TelegramKit is a library for asynchronous interaction with Telegram channels and parsing data. It provides tools to fetch channel information, posts, comments, and more, all using asynchronous requests for efficient data handling.
+
+## Features
+
+- Fetch information about Telegram channels.
+- Retrieve posts from channels.
+- Get comments on posts.
+- Convert post content to text, HTML, and Markdown formats.
+- Extract links from post content.
+
+
 # Usage
 ## Basic Example
 Here's a basic example of how to use TelegramKit to fetch the latest messages from a Telegram channel:
