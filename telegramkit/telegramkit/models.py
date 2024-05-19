@@ -1,65 +1,92 @@
-import markdownify
-from bs4 import BeautifulSoup
 from . import parsers
 from . import telegram_async
 
 
-class Media:
-    def __init__(self, url: str, media_type: str) -> None:
-        self.url = url
-        self.type = media_type
+class BaseModel:
+    url_template: str = ""
+
+    def __init__(self, data: dict = None) -> None:
+        if data:
+            for key, value in data.items():
+                setattr(self, key, value)
 
     async def to_dict(self) -> dict:
-        return {
-            'url': self.url,
-            'type': self.type
-        }
+        data = {}
+        for key, value in self.__dict__.items():
+            if key.startswith('_'):
+                continue
+            if isinstance(value, BaseModel):
+                data[key] = await value.to_dict()
+            elif isinstance(value, list):
+                data[key] = [await item.to_dict() if isinstance(item, BaseModel) else item for item in value]
+            else:
+                data[key] = value
+        return data
+
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__}({self.__dict__})"
+
+    def get_html(self) -> str:
+        raise NotImplementedError("Subclasses should implement this method.")
+
+    def get_text(self) -> str:
+        return parsers.html_to_text(self.get_html())
+
+    def get_markdown(self) -> str:
+        return parsers.html_to_markdown(self.get_html())
+
+    def get_url(self) -> str:
+        return self.url_template.format(**self.__dict__)
 
 
-class Author:
-    def __init__(self, name: str, username: str, photo: str) -> None:
-        self.name = name
-        self.username = username
-        self.photo = photo
+class Media(BaseModel):
+    url_template: str = ""
 
-    async def to_dict(self) -> dict:
-        return {
-            'name': self.name,
-            'username': self.username,
-            'photo': self.photo
-        }
+    def __init__(self, data: dict = None) -> None:
+        self.url = ''
+        self.type = ''
+        super().__init__(data or {})
 
 
-class Comment:
-    def __init__(self, post: 'Post', comment_id: int, text: str, reply: int, author: Author, datetime: str) -> None:
-        self.post = post
-        self.id = comment_id
-        self.text = text
-        self.reply = reply
-        self.author = author
-        self.datetime = datetime
+class Author(BaseModel):
+    url_template: str = "https://t.me/{username}"
 
-    async def to_dict(self) -> dict:
-        return {
-            'post': self.post.url,
-            'id': self.id,
-            'text': self.text,
-            'reply': self.reply,
-            'author': await self.author.to_dict(),
-            'datetime': self.datetime
-        }
+    def __init__(self, data: dict = None) -> None:
+        self.name = ''
+        self.username = ''
+        self.photo = ''
+        super().__init__(data or {})
 
 
-class Post:
-    def __init__(self, channel: 'Channel', url: str, post_id: int, html_content: str, media: list, views: int, datetime: str, data) -> None:
-        self.channel = channel
-        self.url = url
-        self.id = post_id
-        self.html_content = html_content
-        self.media = media
-        self.views = views
-        self.datetime = datetime
-        self.__data = data
+class Comment(BaseModel):
+    url_template: str = "https://t.me/{post.channel.url}/{post.id}?comment={id}"
+
+    def __init__(self, data: dict = None) -> None:
+        self.post = None
+        self.id = 0
+        self.html_content = ''
+        self.reply = None
+        self.author = None
+        self.datetime = ''
+        super().__init__(data or {})
+
+    def get_html(self) -> str:
+        return self.html_content
+
+
+class Post(BaseModel):
+    url_template: str = "https://t.me/{channel.url}/{id}"
+
+    def __init__(self, data: dict = None) -> None:
+        self.channel = None
+        self.url = ''
+        self.id = 0
+        self.html_content = ''
+        self.media = []
+        self.views = 0
+        self.datetime = ''
+        self.__data = None
+        super().__init__(data or {})
 
     async def get_comments(self, limit=10) -> list[Comment] | None:
         return await telegram_async.get_comments(self, limit)
@@ -67,42 +94,23 @@ class Post:
     async def get_comment(self, comment_id: int) -> Comment | None:
         return await telegram_async.get_comment(self, comment_id)
 
-    def get_text(self) -> str:
-        soup = BeautifulSoup(self.html_content, 'html.parser')
-        return soup.get_text()
-
-    def get_markdown(self) -> str:
-        return markdownify.markdownify(self.html_content)
-
-    def get_links(self) -> list:
-        soup = BeautifulSoup(self.html_content, 'html.parser')
-        return [a['href'] for a in soup.find_all('a', href=True)]
-
-    async def to_dict(self) -> dict:
-        return {
-            'channel': self.channel.url,
-            'url': self.url,
-            'id': self.id,
-            'html_content': self.html_content,
-            'text': self.get_text(),
-            'markdown': self.get_markdown(),
-            'links': self.get_links(),
-            'media': [await media.to_dict() for media in self.media],
-            'views': self.views,
-            'datetime': self.datetime
-        }
+    def get_html(self) -> str:
+        return self.html_content
 
 
-class Channel:
-    def __init__(self, url: str, name: str, description: str, subscribers: int, picture: str, data) -> None:
+class Channel(BaseModel):
+    url_template: str = "https://t.me/{url}"
+
+    def __init__(self, data: dict = None) -> None:
         self.private = False
-        self.url = url
-        self.name = name
-        self.description = description
-        self.subscribers = int(subscribers)
-        self.picture = picture
-        self.__data = data
+        self.url = ''
+        self.name = ''
+        self.description = ''
+        self.subscribers = 0
+        self.picture = ''
+        self.__data = None
         self.__posts = {}
+        super().__init__(data or {})
 
     async def get_post(self, post_id: int) -> Post | None:
         return await telegram_async.get_post(self, post_id)
@@ -120,13 +128,3 @@ class Channel:
 
     async def is_private(self) -> bool:
         return self.private
-
-    async def to_dict(self) -> dict:
-        return {
-            'url': self.url,
-            'name': self.name,
-            'description': self.description,
-            'subscribers': self.subscribers,
-            'picture': self.picture,
-            'private': self.private
-        }
