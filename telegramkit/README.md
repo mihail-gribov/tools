@@ -1,79 +1,105 @@
 # Telegram Kit
 
-This project provides an asynchronous client to fetch and parse Telegram channel and post data using aiohttp and BeautifulSoup.
+This is an asynchronous client for interacting with Telegram channels and posts. The client fetches and parses HTML content to provide structured data about channels, posts, comments, authors, and media.
 
-## Modules
+## Features
+* **Async support**: Utilizes aiohttp for non-blocking HTTP requests.
+* **HTML Parsing**: Converts HTML content to structured data using BeautifulSoup.
+* **Model Abstraction**: Provides models for Channels, Posts, Comments, Authors, and Media.
 
-### `config.py`
 
-Contains configuration settings for the Telegram client, including user agent randomization.
+## Installation
+```bash
+git clone https://github.com/yourusername/telegram-async-client.git
+cd telegram-async-client
+pip install -r requirements.txt
+```
 
-### `http_client.py`
+## Quick Start
+Follow these steps to quickly get started with the Telegram Kit.
 
-Defines the `HttpClient` class, which handles asynchronous HTTP requests.
 
-### `models.py`
-
-Defines the model classes representing Telegram entities.
-
-- **BaseModel**: A base class for all models, providing an asynchronous `to_dict` method to automatically include all public attributes.
-- **Media**: Represents a media item with `url` and `type`.
-- **Author**: Represents an author with `name`, `username`, and `photo`.
-- **Comment**: Represents a comment with attributes like `post`, `id`, `text`, `reply`, `author`, and `datetime`.
-- **Post**: Represents a post with attributes like `channel`, `url`, `id`, `html_content`, `media`, `views`, and `datetime`. Methods include fetching comments and converting HTML content to text or markdown.
-- **Channel**: Represents a channel with attributes like `url`, `name`, `description`, `subscribers`, and `picture`. Methods include fetching posts and checking privacy status.
-
-### `parsers.py`
-
-Contains functions to parse HTML content into model objects.
-
-- **parse_subscribers**: Converts a subscriber count string to an integer.
-- **bs_to_author**: Converts a BeautifulSoup object to an `Author`.
-- **bs_to_channel**: Converts a BeautifulSoup object to a `Channel`.
-- **bs_to_post**: Converts a BeautifulSoup object to a `Post`.
-- **bs_to_comments**: Converts a BeautifulSoup object to a list of `Comments`.
-- **bs_to_comment**: Converts a BeautifulSoup object to a `Comment`.
-
-### `telegram_async.py`
-
-Provides asynchronous methods to interact with Telegram.
-
-- **TelegramClient**: 
-  - `fetch_html`: Fetches HTML content from a URL.
-  - `get_channel`: Fetches and parses a channel's HTML page.
-  - `get_post`: Fetches and parses a specific post's HTML page.
-  - `get_comments`: Fetches and parses comments for a post.
-  - `get_comment`: Fetches and parses a specific comment.
-  - `get_all_posts`: Fetches all posts for a channel.
-
-## Usage
-
-### `main.py`
-
-Example script to fetch the latest posts from a Telegram channel.
-
+### Initialize the Client and Fetch Channel Data
+To start using the client, initialize it and fetch basic information about a Telegram channel:
 ```python
 import asyncio
-from telegramkit.telegram_async import TelegramClient
+from telegram_async import TelegramClient
 
-async def fetch_latest_posts(group_name: str, limit: int = 10) -> None:
-    client = TelegramClient()
-    channel = await client.get_channel(f'@{group_name}')
-    if not channel:
-        print(f"Channel {group_name} not found or it is private.")
-        return
+async def main():
+    async with TelegramClient() as client:
+        channel = await client.get_channel('channel_name')
+        if channel:
+            print(f"Channel Name: {channel.name}")
+            print(f"Subscribers: {channel.subscribers}")
 
-    latest_posts = await channel.get_latest()
-    latest_posts = latest_posts[:limit]
+asyncio.run(main())
+```
 
-    for post in latest_posts:
-        print(f"Post ID: {post.id}")
-        print("Text:")
-        print(post.get_text())
-        print("-----------")
+## Usage
+In continuation of the Quick Start, here are additional functionalities provided by the Telegram Kit library to interact with channels, posts, and comments.
 
-    await client.http_client.close()
 
-if __name__ == "__main__":
-    GROUP_NAME = "technodrifters"
-    asyncio.run(fetch_latest_posts(GROUP_NAME))
+### Load Posts
+To load and display posts from a channel, you can extend the previous code as follows:
+
+```python
+async def load_posts(channel_name):
+    async with TelegramClient() as client:
+        channel = await client.get_channel(channel_name)
+        if channel:
+            posts = await client.load_posts(channel)
+            for post_id, post in posts.items():
+                print(f"Post ID: {post_id}, Content: {post.html_content}")
+
+asyncio.run(load_posts('channel_name'))
+```
+
+### Fetch a Single Post
+To fetch a specific post by its ID:
+
+```python
+async def fetch_post(channel_name, post_id):
+    async with TelegramClient() as client:
+        post = await client.get_post(channel_name, post_id)
+        if post:
+            print(f"Post ID: {post.id}, Content: {post.html_content}")
+
+asyncio.run(fetch_post('channel_name', 12345))
+```
+
+### Get Comments for a Post
+To retrieve comments for a specific post:
+
+```python
+async def fetch_comments(channel_name, post_id):
+    async with TelegramClient() as client:
+        post = await client.get_post(channel_name, post_id)
+        if post:
+            comments = await post.get_comments(limit=5)
+            for comment in comments:
+                print(f"Comment ID: {comment.id}, Content: {comment.html_content}")
+
+asyncio.run(fetch_comments('channel_name', 12345))
+```
+
+### Fetch Media
+To fetch and display media associated with posts:
+
+```python
+async def fetch_media(channel_name):
+    async with TelegramClient() as client:
+        channel = await client.get_channel(channel_name)
+        if channel:
+            posts = await client.load_posts(channel)
+            for post_id, post in posts.items():
+                for media in post.media:
+                    print(f"Media URL: {media.url}, Type: {media.type}")
+
+asyncio.run(fetch_media('channel_name'))
+
+```
+
+These examples demonstrate how to extend the basic setup to perform more complex operations with the Telegram Async Client library.
+
+## Class Diagram
+![Class Diagram](classes.svg)
