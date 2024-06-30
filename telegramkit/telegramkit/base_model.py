@@ -8,9 +8,10 @@ class BaseModel:
         self.id = id
         
     def from_dict(self, data: dict):
-      if data:
-          for key, value in data.items():
-              setattr(self, key, value)
+        if data:
+            for key, value in data.items():
+                if hasattr(self, key):
+                    setattr(self, key, value)
 
     async def to_dict(self) -> dict:
         data = {}

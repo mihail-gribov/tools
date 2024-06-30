@@ -81,43 +81,6 @@ def get_data_author(msg: BeautifulSoup) -> dict:
     }
 
 
-# def get_data_post(bs: BeautifulSoup, channel_url: str) -> dict:
-#     html_content = str(bs.find(class_='tgme_widget_message_text')).replace('<br/>', '\n') if bs.find(class_='tgme_widget_message_text') else None
-#     post_id = int(bs.get('data-post').split('/')[-1])
-#     views = parse_subscribers(bs.find(class_='tgme_widget_message_views').text) if bs.find(class_='tgme_widget_message_views') else 0
-#     media = [
-#         {
-#             'url': photo.get('style').split("background-image:url('")[1].split("')")[0],
-#             'type': 'photo/jpg'
-#         } for photo in bs.find_all(class_='tgme_widget_message_photo_wrap')
-#     ] + [
-#         {
-#             'url': video.get('src'),
-#             'type': 'video/mp4'
-#         } for video in bs.find_all(class_='tgme_widget_message_video')
-#     ] + [
-#         {
-#             'url': round_video.get('src'),
-#             'type': 'round_video/mp4'
-#         } for round_video in bs.find_all(class_='tgme_widget_message_roundvideo')
-#     ] + [
-#         {
-#             'url': voice_msg.get('src'),
-#             'type': 'voice/ogg'
-#         } for voice_msg in bs.find_all(class_='tgme_widget_message_voice')
-#     ]
-#     datetime = bs.find(class_='datetime').get('datetime') if bs.find(class_='datetime') else bs.find(class_='time').get('datetime')
-#     return {
-#         'channel_url': channel_url,
-#         'url': f'{channel_url}/{post_id}',
-#         'id': post_id,
-#         'html_content': html_content,
-#         'media': media,
-#         'views': views,
-#         'datetime': datetime,
-#         'data': bs
-#     }
-
 def get_data_comment(msg: BeautifulSoup, post_url: str) -> dict:
     reply = int(msg.find(class_='tgme_widget_message_reply').get('data-reply-to')) if msg.find(class_='tgme_widget_message_reply') else None
     return {

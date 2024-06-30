@@ -2,7 +2,9 @@ import asyncio
 from bs4 import BeautifulSoup
 from .http_client import HttpClient
 from . import parsers
-from .models import Channel, Post, Comment
+from .channel import Channel
+from .post import Post
+from .comment import Comment
 from .config import request_header
 from typing import Optional
 
