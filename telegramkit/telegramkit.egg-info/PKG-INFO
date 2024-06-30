@@ -1,3 +1,18 @@
+Metadata-Version: 2.1
+Name: telegramkit
+Version: 1.0.0
+Summary: A library for asynchronous interaction with Telegram channels and parsing data.
+Home-page: https://github.com/yourusername/telegramkit
+Author: Ваше Имя
+Author-email: your.email@example.com
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+
 # Telegram Kit
 
 This project provides an asynchronous client to fetch and parse Telegram channel and post data using aiohttp and BeautifulSoup.
@@ -77,3 +92,5 @@ async def fetch_latest_posts(group_name: str, limit: int = 10) -> None:
 if __name__ == "__main__":
     GROUP_NAME = "technodrifters"
     asyncio.run(fetch_latest_posts(GROUP_NAME))
+
+

@@ -2,14 +2,13 @@ import aiohttp
 
 
 class HttpClient:
-    def __init__(self, timeout: int = 10):
-        self.timeout = aiohttp.ClientTimeout(total=timeout)
-        self.session = aiohttp.ClientSession(timeout=self.timeout)
+    def __init__(self):
+        self.session = aiohttp.ClientSession()
 
     async def fetch(self, url: str, headers: dict = None) -> str:
         try:
             async with self.session.get(url, headers=headers) as response:
-                response.raise_for_status()
+                response.raise_for_status()  
                 return await response.text()
         except aiohttp.ClientError as e:
             print(f"HTTP request failed: {e}")
