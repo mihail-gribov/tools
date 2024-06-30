@@ -1,5 +1,5 @@
 import pytest
-from telegramkit.models import Media
+from telegramkit.media import Media
 
 class MockClient:
     pass

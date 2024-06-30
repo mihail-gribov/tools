@@ -1,5 +1,5 @@
 import pytest
-from telegramkit.models import Author
+from telegramkit.author import Author
 
 class MockClient:
     pass

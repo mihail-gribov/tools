@@ -1,5 +1,5 @@
 import pytest
-from telegramkit.models import Comment
+from telegramkit.comment import Comment
 
 class MockClient:
     pass

@@ -4,7 +4,7 @@ from .http_client import HttpClient
 from . import parsers
 from .models import Channel, Post, Comment
 from .config import request_header
-from typing import Optional, List
+from typing import Optional
 
 class TelegramClient:
     def __init__(self, loop=None):
@@ -30,7 +30,7 @@ class TelegramClient:
             return None
         return result
 
-    async def load_posts(self, channel: Channel, post_id: int = -1) -> List[Post]:
+    async def load_posts(self, channel: Channel, post_id: int = -1) -> list[Post]:
         url = channel.get_url()
         if post_id > -1:
             url += f'/{post_id}'
@@ -68,7 +68,7 @@ class TelegramClient:
             print(f"Failed to get post: {e}")
             return None
 
-    async def get_comments(self, post: Post, limit: int = 10) -> Optional[List[Comment]]:
+    async def get_comments(self, post: Post, limit: int = 10) -> Optional[list[Comment]]:
         try:
             html = await self.fetch_html(f'{post.get_url()}?embed=1&discussion=1&comments_limit={limit}')
             bs = BeautifulSoup(html, 'html.parser')

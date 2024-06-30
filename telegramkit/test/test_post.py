@@ -1,5 +1,7 @@
 import pytest
-from telegramkit.models import Post, Channel
+from typing import Optional
+from telegramkit.post import Post
+from telegramkit.channel import Channel
 
 class MockClient:
     async def load_posts(self, channel, post_id=None):
