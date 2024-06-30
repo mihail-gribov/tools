@@ -2,14 +2,16 @@ from bs4 import BeautifulSoup
 import markdownify
 
 def html_to_text(html_content: str) -> str:
+    """Converts HTML content to plain text."""
     soup = BeautifulSoup(html_content, 'html.parser')
     return soup.get_text()
 
 def html_to_markdown(html_content: str) -> str:
+    """Converts HTML content to Markdown format."""
     return markdownify.markdownify(html_content)
 
-
 def parse_subscribers(subs_str: str) -> int:
+    """Parses a string representing the number of subscribers to an integer."""
     if 'K' in subs_str:
         return int(float(subs_str[:-1]) * 1000)
     elif 'M' in subs_str:
@@ -17,6 +19,7 @@ def parse_subscribers(subs_str: str) -> int:
     return int(subs_str)
 
 def get_data_channel(bs: BeautifulSoup) -> dict:
+    """Extracts channel data from a BeautifulSoup object."""
     info = bs.find(class_='tgme_channel_info')
     description = info.find(class_='tgme_channel_info_description').text if info.find(class_='tgme_channel_info_description') else None
     subscribers = parse_subscribers(info.find(class_='tgme_channel_info_counter').find(class_='counter_value').text)
@@ -30,6 +33,7 @@ def get_data_channel(bs: BeautifulSoup) -> dict:
     }
 
 def get_data_posts(bs: BeautifulSoup) -> list[dict]:
+    """Extracts post data from a BeautifulSoup object."""
     result = []
     for post_bs in bs.find_all(class_='tgme_widget_message'):
         html_content = str(post_bs.find(class_='tgme_widget_message_text')).replace('<br/>', '\n') if post_bs.find(class_='tgme_widget_message_text') else None
@@ -67,11 +71,8 @@ def get_data_posts(bs: BeautifulSoup) -> list[dict]:
         result.append(post_data)
     return result
 
-    
-
-
-
 def get_data_author(msg: BeautifulSoup) -> dict:
+    """Extracts author data from a BeautifulSoup object."""
     author_username = msg.find(class_='tgme_widget_message_user').find('a').get('href').split('/')[-1] if msg.find(class_='tgme_widget_message_user') else None
     author_photo = msg.find(class_='tgme_widget_message_user_photo').find('img').get('src') if msg.find(class_='tgme_widget_message_user_photo') else None
     return {
@@ -80,8 +81,8 @@ def get_data_author(msg: BeautifulSoup) -> dict:
         'photo': author_photo
     }
 
-
 def get_data_comment(msg: BeautifulSoup, post_url: str) -> dict:
+    """Extracts comment data from a BeautifulSoup object."""
     reply = int(msg.find(class_='tgme_widget_message_reply').get('data-reply-to')) if msg.find(class_='tgme_widget_message_reply') else None
     return {
         'post_url': post_url,

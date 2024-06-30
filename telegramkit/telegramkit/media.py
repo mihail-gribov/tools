@@ -1,14 +1,18 @@
 from .base_model import BaseModel
 
 class Media(BaseModel):
+    """Represents media content with various types and methods to generate HTML."""
+    
     url_template: str = ""
 
     def __init__(self, client, id):
+        """Initializes a Media instance with client and id."""
         super().__init__(client, id)
         self.url = ''
         self.type = ''
 
     def get_html(self) -> str:
+        """Returns an HTML representation of the media based on its type."""
         if self.type.startswith('photo'):
             return f'<img src="{self.url}" alt="photo">'
         elif self.type.startswith('video') or self.type == 'round_video/mp4':
