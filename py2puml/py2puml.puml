@@ -1,0 +1,26 @@
+@startuml
+
+package "uml_generator" <<Frame>> #F0F0FF {
+  class UMLGenerator {
+    + all_class_bases
+    + directory
+    + uml
+    ....
+    ~ __init__(self, directory_path)
+    + add_inheritance_relations(self)
+    + determine_class_type(self, has_fields, abstract_method_count, total_method_count)
+    + extract_fields_from_init(self, init_method)
+    + format_class_info(self, class_info)
+    + generate_uml(self)
+    + get_type_annotation(self, annotation)
+    + parse_python_file(self, file_path)
+    + process_attributes(self, body_item)
+    + process_class_def(self, node)
+    + process_fields(self, body_item)
+    + process_function_def(self, node)
+    + process_global_vars(self, node)
+    + process_method_def(self, body_item)
+    + visibility(self, name)
+  }
+}
+@enduml
